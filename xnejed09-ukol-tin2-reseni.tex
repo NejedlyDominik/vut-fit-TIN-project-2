@@ -1,0 +1,309 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage[left=0.7cm, text={18.8cm, 24cm}, top=3cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[czech]{babel}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage[ruled, linesnumbered]{algorithm2e}
+\usepackage{amssymb}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{automata, positioning, arrows}
+\usepackage{enumerate}
+\usepackage[hidelinks, colorlinks, linkcolor=blue]{hyperref}
+\allowdisplaybreaks
+
+\SetKwInput{KwIn}{Vstup}
+\SetKwInput{KwOut}{Výstup}
+\renewcommand{\algorithmcfname}{Algoritmus}
+
+\def\gets{\coloneqq}
+
+\newcommand{\comp}[1]{\overline{#1}}
+%\newcommand{\comp}[1]{\text{co--}#1}
+
+\newcommand{\aprefix}[1]{#1_{a\textit{-pre}}}
+\newcommand{\asuffix}[1]{#1_{a\textit{-suf}}}
+
+\newtheoremstyle{result}{}{}{}{}{\bfseries}{:}{ }{\thmname{#1}\thmnumber{ #2}\thmnote{ (#3)}}
+
+\theoremstyle{result}
+\newtheorem*{result}{Řešení}
+
+\makeatletter
+\renewcommand{\p@enumii}{}
+\makeatother
+
+\makeatletter         
+\renewcommand\maketitle{
+{\raggedright % Note the extra {
+\begin{center}
+{\Large \bfseries \@title }\\[2ex]
+{\@author}\\[8ex] 
+\end{center}}} % Note the extra }
+\makeatother
+
+\title{Teoreticka informatika (TIN) – 2022/2023\\ Úkol 2}
+\author{Domink Nejedlý (xnejed09) }
+
+\begin{document}
+
+
+
+\maketitle
+
+
+
+
+
+\begin{enumerate}
+
+
+
+
+
+    \item
+    Uvažujte abecedu $\Sigma = \{a, b, A, 0, B\}$. Sestrojte deterministický zásobníkový automat přijímající jazyk $L \subseteq \Sigma^*$ definovaný jako
+    \begin{align*}
+        L = &\{w.0 \mid w \in \{a, b\}^* \land \#_a(w) = \#_b(w)\} \cup \\
+            &\{w.A \mid w \in \{a, b\}^* \land \#_a(w) > \#_b(w)\} \cup \\
+            &\{w.B \mid w \in \{a, b\}^* \land \#_a(w) < \#_b(w)\},
+    \end{align*}
+    kde $\#_x(w)$ pro $x \in \{a, b\}$ značí počet výskytů symbolu $x$ v řetězci $w$. Použijte abecedu zásobníkových symbolů $\Gamma = \{\times, \bullet\}$ a symbol $\times$ jako startovací symbol zásobníku. Automat zapište v grafické formě. Demonstrujte přijetí slova $abaabA$.
+    
+    
+    \begin{result}
+        Deterministický zásobníkový automat (DZA) M přijímající jazyk $L$ ($L(M) = L$):
+        \begin{figure}[h]
+        \centering
+        \begin{tikzpicture}[node distance = 3.7cm, on grid, auto]
+    
+        \node (qs) [state, initial, initial text={$\times$}] {$q_s$};
+        \node (qf) [state, accepting, right=of qs] {$q_f$};
+        \node (qa) [state, above=of qf] {$q_a$};
+        \node (qb) [state, below=of qf] {$q_b$};
+    
+        \path[->]
+            (qs) edge node {$0, \times / \epsilon$} (qf)
+            (qs) edge [bend left] node {$a, \times / \bullet\times$} (qa)
+            (qs) edge [bend right] node[below left] {$b, \times / \bullet\times$} (qb)
+            (qa) edge [loop above] node {$
+            \begin{aligned}
+                &a, \bullet / \bullet\bullet\\
+                &b, \bullet / \epsilon
+            \end{aligned}$} ()
+            (qb) edge [loop below] node {$
+            \begin{aligned}
+                &b, \bullet / \bullet\bullet\\
+                &a, \bullet / \epsilon
+            \end{aligned}$} ()
+            (qa) edge node {$\epsilon, \times / \times$} (qs)
+            (qa) edge node {$A, \bullet / \epsilon$} (qf)
+            (qb) edge node [above right] {$\epsilon, \times / \times$} (qs)
+            (qb) edge node [right] {$B, \bullet / \epsilon$} (qf);
+    
+        \end{tikzpicture}
+        \caption{DZA $M$}
+        \end{figure}
+    
+        Slovo $abaabA$ přijme $M$ následující sekvencí přechodů:
+        \begin{multline*}
+        (q_s, abaabA, \times) \vdash_M (q_a, baabA, \bullet\times) \vdash_M (q_a, aabA, \times) \vdash_M (q_s, aabA, \times) \vdash_M (q_a, abA, \bullet\times)\\ \vdash_M (q_a, bA, \bullet\bullet\times) \vdash_M (q_a, A, \bullet\times) \vdash_M (q_f, \epsilon, \times)
+        \end{multline*}
+    \end{result}
+    
+    
+    
+    
+    
+    \item
+    Uvažujte abecedu $\Sigma$ takovou, že $\Sigma \cap \{0, 1\} = \emptyset$ a jazyk $L = L(G)$ nad abecedou $\Sigma$ zadaný pomocí bezkontextové gramatiky $G$. Dále uvažujte jazyk $L'$ definovaný jako
+    $$L' = \{w.x \mid w \in \Sigma^* \land (w \in L \iff x = 1) \land (w \notin L \iff x = 0)\}.$$
+    Inspirujte se v kapitole o uzávěrových vlastnostech bezkontextových jazyků a proveďte jedno z následujících:
+    \begin{enumerate}
+        \item Navrhněte algoritmus, který bude mít na vstupu gramatiku $G$ a sestaví bezkontextovou gramatiku $G'$ takovou, že $L(G') = L'$.
+        \item Dokažte, že takový algoritmus neexistuje.
+    \end{enumerate}
+    
+    
+    \begin{result}
+        Takový algoritmus neexistuje. Zřejmě
+        $$L' = \{w.x \mid w \in \Sigma^* \land (w \in L \iff x = 1) \land (w \notin L \iff x = 0)\} = L\{1\} \cup \comp{L}\{0\}.$$
+        Uvažme abecedu $\Sigma = \{a, b, c\}$ a jazyk $L = \Sigma^* \setminus \{a^nb^nc^n \mid n \ge 1\} = \comp{\{a^nb^nc^n \mid n \ge 1\}} \in \mathcal{L}_2$. Pak
+        $$L' = \comp{\{a^nb^nc^n \mid n \ge 1\}}\{1\} \cup \{a^nb^nc^n \mid n \ge 1\}\{0\}.$$
+        Nyní ukážeme, že $L' \notin \mathcal{L}_2$. Důkaz provedeme sporem pomocí Pumping lemmatu pro bezkontextové jazyky.
+        Předpokládejme, že $L' \in \mathcal{L}_2$. Potom dle Pumping lemmatu $\exists k > 0: \forall z \in L': |z| \ge k \implies \exists u, v, w, x, y \in \Sigma^*: z = uvwxy \land vx \neq \epsilon \land |vwx| \leq k \land \forall i \ge 0: uv^iwx^iy \in L'$. Uvažme libovolné $k$ splňující výše uvedenou podmínku. Zvolme slovo $z = a^kb^kc^k0 \in L'$. Zřejmě $|z| = 3k + 1 \ge k$. Uvažme libovolné $u, v, w, x, y \in \Sigma^*$ splňující $z = a^kb^kc^k0 = uvwxy \land vx \neq \epsilon \land |vwx| \leq k$. V souladu s těmito podmínkami jsou možné následující dekompozice:
+        
+        \begin{itemize}
+            \item Řetězec $vwx = a^mb^n$, kde $m, n \ge 0 $ a $1 \le m + n \le k$. Pak ale pro všechna $i \neq 1$ platí, že $uv^iwx^iy \notin L'$, jelikož $\#_a(uv^iwx^iy) \neq \#_c(uv^iwx^iy)$ nebo $\#_b(uv^iwx^iy) \neq \#_c(uv^iwx^iy)$ a současně slovo $uv^iwx^iy$ nekončí symbolem $1$ ($1$ není sufixem $uv^iwx^iy$).
+            \item Řetězec $vwx = b^mc^n$, kde $m, n \ge 0 $ a $1 \le m + n \le k$. Pak ale pro všechna $i \neq 1$ platí, že $uv^iwx^iy \notin L'$, jelikož $\#_a(uv^iwx^iy) \neq \#_b(uv^iwx^iy)$ nebo $\#_a(uv^iwx^iy) \neq \#_c(uv^iwx^iy)$ a současně slovo $uv^iwx^iy$ nekončí symbolem $1$ ($1$ není sufixem $uv^iwx^iy$).
+            \item Řetězec $vwx = c^n0$, kde $0 \le n \le k - 1$. Potom ale při volbě $i = 0$ slovo $uv^iwx^iy$ nekončí ani jedním ze symbolů $0$ a $1$ ($0$ ani $1$ není sufixem $uv^iwx^iy$) nebo $\#_c(uv^iwx^iy) < \#_b(uv^iwx^iy)$, přičemž slovo $uv^iwx^iy$ není ukončeno symbolem 1 ($1$ není sufixem $uv^iwx^iy$). Proto platí, že $uv^iwx^iy \notin L'$.
+        \end{itemize}
+        
+        Jiné dekompozice nejsou možné, jelikož by porušovaly podmínku $|vwx| \leq k$. Vidíme tedy, že pro každý možný rozklad lze výsledné slovo $uv^iwx^iy$ z jazyka $L'$ "vypumpovat", což vede ke sporu s počátečním předpokladem. Z toho důvodu opravdu $L' \notin \mathcal{L}_2$. Pro jazyk $L'$ tedy neexistuje bezkontextová gramatika $G'$ taková, že $L(G') = L'$, a proto nemůže existovat univerzální algoritmus, který by byl schopen takové gramatiky pro libovolné bezkontextové jazyky $L$ tvořit.
+    \end{result}
+    
+    
+    
+    
+    
+    \item
+    Navrhněte algoritmus, který pro bezkontextovou gramatiku $G = (N, \Sigma, P, S)$ spočítá množinu
+    $$N_{aa} = \{A \in N \mid \exists w \in \Sigma^*: A \Rightarrow^+_G w \land aa \text{ je podřetězec } w\}.$$
+    V algoritmu můžete využít množinu $N_\epsilon = \{A \in N \mid A \Rightarrow^+_G \epsilon\}$. Doporučujeme nadefinovat si další vhodné množiny neterminálů a algoritmicky popsat jejich výpočet (u $N_\epsilon$ popis výpočtu není potřeba).
+    
+    Ilustrujte použití algoritmu na příkladě gramatiky s pravidly
+    \begin{align*}
+        &S \rightarrow XY \mid YX \mid Z & &X \rightarrow Xba \mid \epsilon & &Y \rightarrow Yab \mid \epsilon & Z \rightarrow XbaaU
+    \end{align*}
+    
+    
+    \begin{result}
+        Nejprve si nadefinujme pomocné množiny neterminálů a postupy jejich výpočtů. Začněme s~mno\-žinou neterminálů generující terminální řetězce, označovanou jako $N_t$.
+        
+        {\centering
+        \begin{minipage}{1\linewidth}
+        \begin{algorithm}[H] \label{nt-alg}
+            \caption{Výpočet množiny $N_t$}
+            \KwIn{bezkontextová gramatika $G = (N, \Sigma, P, S)$}
+            \KwOut{$N_t = \{A \in N \mid \exists w \in \Sigma^*: A \Rightarrow^+_G w\}$}
+            $N_t^0 \gets \emptyset, i \gets 0$ \\
+            $N_t^{i + 1} \gets \{A \in N \mid \exists (A \to \alpha) \in P: \alpha \in (N_t^i \cup \Sigma)^*\}$ \label{nt-iter} \\
+            Jestliže $N_t^{i + 1} = N_t^i$, pak $N_t \gets N_t^i$ a ukonči výpočet, jinak $i \gets i + 1$ a vrať se na bod \ref{nt-iter}.
+        \end{algorithm}
+        \end{minipage}
+        \par
+        }
+        
+        Pokračujme množinou neterminálů, jež mohou generovat řetězce začínající symbolem $a$ ($a$ je tedy jejich prefixem), označovanou jako $\aprefix{N}$.
+        
+        {\centering
+        \begin{minipage}{1\linewidth}
+        \begin{algorithm}[H] \label{na-prefix-alg}
+            \caption{Výpočet množiny $\aprefix{N}$}
+            \KwIn{bezkontextová gramatika $G = (N, \Sigma, P, S)$}
+            \KwOut{$\aprefix{N} = \{A \in N \mid \exists w \in \Sigma^*: A \Rightarrow^+_G w \land a \text{ je prefix } w\}$}
+            Vypočti $N_\epsilon$. \\
+            Vypočti $N_t$ pomocí algoritmu \ref{nt-alg}. \\
+            $\aprefix{N}^0 \gets \emptyset, i \gets 0$ \\
+            $\aprefix{N}^{i + 1} \gets \{A \in N \mid \exists (A \to \alpha) \in P: \alpha \in N_\epsilon^*(\{a\} \cup \aprefix{N}^i)(\Sigma \cup N_t)^*\}$ \label{na-prefix-iter} \\
+            Jestliže $\aprefix{N}^{i + 1} = \aprefix{N}^i$, pak $\aprefix{N} \gets \aprefix{N}^i$ a ukonči výpočet, jinak $i \gets i + 1$ a vrať se na bod \ref{na-prefix-iter}.
+        \end{algorithm}
+        \end{minipage}
+        \par
+        }
+        
+        Dále zadefinujme množinu neterminálů, jež mohou generovat řetězce končící symbolem $a$ ($a$ je tedy jejich sufixem), označovanou jako $\asuffix{N}$.
+        
+        {\centering
+        \begin{minipage}{1\linewidth}
+        \begin{algorithm}[H] \label{na-suffix-alg}
+            \caption{Výpočet množiny $\asuffix{N}$}
+            \KwIn{bezkontextová gramatika $G = (N, \Sigma, P, S)$}
+            \KwOut{$\asuffix{N} = \{A \in N \mid \exists w \in \Sigma^*: A \Rightarrow^+_G w \land a \text{ je sufix } w\}$}
+            Vypočti $N_\epsilon$. \\
+            Vypočti $N_t$ pomocí algoritmu \ref{nt-alg}. \\
+            $\asuffix{N}^0 \gets \emptyset, i \gets 0$ \\
+            $\asuffix{N}^{i + 1} \gets \{A \in N \mid \exists (A \to \alpha) \in P: \alpha \in (\Sigma \cup N_t)^*(\{a\} \cup \asuffix{N}^i)N_\epsilon^*\}$ \label{na-suffix-iter} \\
+            Jestliže $\asuffix{N}^{i + 1} = \asuffix{N}^i$, pak $\asuffix{N} \gets \asuffix{N}^i$ a ukonči výpočet, jinak $i \gets i + 1$ a vrať se na bod \ref{na-suffix-iter}.
+        \end{algorithm}
+        \end{minipage}
+        \par
+        }
+        
+        Nyní s pomocí výše zavedených množin definujme postup výpočtu množiny $N_{aa}$.
+        
+        {\centering
+        \begin{minipage}{1\linewidth}
+        \begin{algorithm}[H] \label{naa-alg}
+            \caption{Výpočet množiny $N_{aa}$}
+            \KwIn{bezkontextová gramatika $G = (N, \Sigma, P, S)$}
+            \KwOut{$N_{aa} = \{A \in N \mid \exists w \in \Sigma^*: A \Rightarrow^+_G w \land aa \text{ je podřetězec } w\}$}
+            Vypočti $N_\epsilon$. \label{naa-resolve-eps} \\
+            Vypočti $N_t$ pomocí algoritmu \ref{nt-alg}. \label{naa-resolve-nt} \\
+            Vypočti $\aprefix{N}$ pomocí algoritmu \ref{na-prefix-alg}. \label{naa-resolve-prefix} \\
+            Vypočti $\asuffix{N}$ pomocí algoritmu \ref{na-suffix-alg}. \label{naa-resolve-suffix} \\
+            $N_{aa}^0 \gets \emptyset, i \gets 0$ \label{naa-init} \\
+            $N_{aa}^{i + 1} \gets \{A \in N \mid \exists (A \to \alpha) \in P: \alpha \in (\Sigma \cup N_t)^*((\{a\} \cup \asuffix{N})N_\epsilon^*(\{a\} \cup \aprefix{N}) \cup N_{aa}^i)(\Sigma \cup N_t)^*\}$ \label{naa-iter} \\
+            Jestliže $N_{aa}^{i + 1} = N_{aa}^i$, pak $N_{aa} \gets N_{aa}^i$ a ukonči výpočet, jinak $i \gets i + 1$ a vrať se na bod \ref{naa-iter}. \label{naa-finish}
+        \end{algorithm}
+        \end{minipage}
+        \par
+        }
+        
+        Ilustrujme nyní použití algoritmu \ref{naa-alg} na gramatice uvedené v zadání. Předpokládejme že $N = \{S, X, Y, Z, U\}$ a $\Sigma = \{a, b\}$.
+        
+        \begin{enumerate}[(1)]
+            \item Výpočet $N_\epsilon$ (krok \ref{naa-resolve-eps}):
+            \begin{align*}
+                N_\epsilon^0 &= \emptyset \\
+                N_\epsilon^1 &= \{X, Y\} \\
+                N_\epsilon^2 &= \{S, X, Y\} = N_\epsilon^3 = N_\epsilon
+            \end{align*}
+            
+            \item Výpočet $N_t$ (krok \ref{naa-resolve-nt}):
+            \begin{align*}
+                N_t^0 &= \emptyset \\
+                N_t^1 &= \{X, Y\} \\
+                N_t^2 &= \{S, X, Y\} = N_t^3 = N_t
+            \end{align*}
+            
+            \item Výpočet $\aprefix{N}$ (krok \ref{naa-resolve-prefix}):
+            \begin{align*}
+                \aprefix{N}^0 &= \emptyset \\
+                \aprefix{N}^1 &= \{Y\} \\
+                \aprefix{N}^2 &= \{S, Y\} = \aprefix{N}^3 = \aprefix{N}
+            \end{align*}
+            
+            \item Výpočet $\asuffix{N}$ (krok \ref{naa-resolve-suffix}):
+            \begin{align*}
+                \asuffix{N}^0 &= \emptyset \\
+                \asuffix{N}^1 &= \{X\} \\
+                \asuffix{N}^2 &= \{S, X\} = \asuffix{N}^3 = \asuffix{N}
+            \end{align*}
+            
+            \item Samotný výpočet $N_{aa}$ (kroky \ref{naa-init}, \ref{naa-iter} a \ref{naa-finish}):
+            \begin{align*}
+                N_{aa}^0 &= \emptyset \\
+                N_{aa}^1 &= \{S\} = N_{aa}^2 = N_{aa}
+            \end{align*}
+            
+        \end{enumerate}
+    \end{result}
+    
+    
+    
+    
+    
+    \item
+    Uvažujte následující operátor $\blacktriangle: 2^{\Sigma^*} \times 2^{\Sigma^*} \rightarrow 2^{\Sigma^*}$ na jazycích nad abecedou $\Sigma$:
+    $$L_1 \blacktriangle L_2 = \{w \in \Sigma^* \mid \forall w_1, w_2 \in \Sigma^*: w_1w_2 = w \implies (w_1 \in L_1 \lor w_2 \in L_2)\}$$
+    Dokažte, že množina rekurzivně vyčíslitelných jazyků je uzavřena na $\blacktriangle$.
+    
+    
+    \begin{result}
+        Uvažujme dva libovolné rekurzívně vyčíslitelné (RE) jazyky $L_1$ a $L_2$ nad abecedou $\Sigma$. Jelikož $L_1, L_2 \in \mathcal{L}_0 = \mathcal{L}_{RE} = \mathcal{L}_{TS}$, existují TS (Turingův stroj) $M_1$ a TS $M_2$ takové, že $L_1 = L(M_1)$ a $L_2 = L(M_2)$. Nyní sestrojme třípáskový TS $M_{L_1 \blacktriangle L_2}$ takový, že $L(M_{L_1 \blacktriangle L_2}) = L_1 \blacktriangle L_2$. Předpokládejme, že zpracovávaný řetězec je u $M$ na počátku zapsán na první pásce, zbylé dvě pásky jsou prázdné a všechny čtecí/zápisové hlavy jsou na nejlevější pozici. $M$ může postupovat následujícím způsobem:
+        \begin{enumerate}[(1)]
+            \item $M$ nakopíruje prefix vstupního řetězce z první pásky od jejího počátku po aktuální pozici hlavy (tedy prefix vymezený nejlevější pozicí první pásky a aktuálním umístěním čtecí/zápisové hlavy na této pásce) včetně na druhou pásku a zbytek vstupu z první pásky na pásku třetí. \label{ts-m-iter}
+            
+            \item $M$ prokládaně krok po kroku simuluje na druhé pásce $M_1$ a na třetí pásce $M_2$. Vždy tedy provede krok simulace $M_1$, poté $M_2$ a následně tento cyklus opakuje. V případě, že $M_1$, nebo $M_2$ zamítne svůj vstup (zasekne se či abnormálně skončí), pokračuje dále simulace pouze toho druhého (nezastaveného) z nich již bez střídání.
+           
+            \item Ve chvíli, kdy jeden ze strojů $M_1$ nebo $M_2$ přijme svůj vstup, hlava na první pásce se posune o jednu pozici doprava. Pokud se pod ní následně nachází symbol $\Delta$ (blank), tak $M$ přijme vstupní řetězec (pro všechna jeho rozdělení na dvě části platí, že první z nich patří do $L_1$ nebo druhá patří do $L_2$). Jinak $M$ smaže obsah druhé i třetí pásky, hlavy na těchto páskách přesune na nejlevější pozici (první symbol $\Delta$) a~přejde na bod \ref{ts-m-iter}.
+            
+            \item Pokud $M_1$ ani $M_2$ nepřijme, tedy pokud oba tyto stroje zamítnou nebo cyklí (případně kombinace -- jeden zamítne a druhý cyklí), pak také $M$ zamítne/cyklí (tedy nepřijme).
+        \end{enumerate}
+    
+        Pro libovolné dva jazyky $L_1$ a $L_2$ nad abecedou $\Sigma$ lze tedy sestrojit TS $M$ (zde třípáskový) přijímající jazyk $L_1 \blacktriangle L_2$. Množina rekurzivně vyčíslitelných jazyků je proto na $\blacktriangle$ uzavřena.
+    \end{result}
+    
+    
+    
+    
+    
+\end{enumerate}
+
+
+
+
+
+\end{document}
